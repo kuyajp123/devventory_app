@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+export 'package:devventory_app/shared/presentation/action_button.dart';
+
 class CompanionLayout extends StatelessWidget {
   const CompanionLayout({super.key, required this.child, this.trailing});
   final Widget child;
@@ -8,11 +10,11 @@ class CompanionLayout extends StatelessWidget {
   Widget build(BuildContext context) => Scaffold(
     body: SafeArea(
       child: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(24, 24, 24, 32),
+        padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
         keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
         child: Center(
           child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 460),
+            constraints: const BoxConstraints(maxWidth: 480),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
@@ -22,20 +24,30 @@ class CompanionLayout extends StatelessWidget {
                   spacing: 12,
                   runSpacing: 8,
                   children: [
-                    const Wrap(
+                    Wrap(
                       crossAxisAlignment: WrapCrossAlignment.center,
                       spacing: 10,
                       children: [
-                        Icon(
-                          Icons.inventory_2_outlined,
-                          color: Color(0xFF7DD3FC),
+                        Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .surfaceContainerHigh,
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: Icon(
+                            Icons.inventory_2_rounded,
+                            color: Theme.of(context).colorScheme.primary,
+                            size: 22,
+                          ),
                         ),
-                        Text(
-                          'DEVVENTORY',
+                        const Text(
+                          'devventory',
                           style: TextStyle(
-                            fontSize: 15,
+                            fontSize: 20,
                             fontWeight: FontWeight.w800,
-                            letterSpacing: 2,
+                            letterSpacing: -0.7,
                           ),
                         ),
                       ],
@@ -43,7 +55,7 @@ class CompanionLayout extends StatelessWidget {
                     ?trailing,
                   ],
                 ),
-                const SizedBox(height: 40),
+                const SizedBox(height: 32),
                 child,
               ],
             ),
@@ -68,50 +80,33 @@ class StatusNotice extends StatelessWidget {
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: isError ? colors.errorContainer : colors.surfaceContainerHigh,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(20),
         ),
-        child: Text(
-          message,
-          style: TextStyle(
-            color: isError ? colors.onErrorContainer : colors.onSurface,
-          ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(top: 2),
+              child: Icon(
+                isError
+                    ? Icons.error_outline_rounded
+                    : Icons.info_outline_rounded,
+                size: 20,
+                color: isError ? colors.onErrorContainer : colors.primary,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                message,
+                style: TextStyle(
+                  color: isError ? colors.onErrorContainer : colors.onSurface,
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
-}
-
-class ActionButton extends StatelessWidget {
-  const ActionButton({
-    super.key,
-    required this.label,
-    required this.onPressed,
-    this.busy = false,
-    this.icon,
-  });
-  final String label;
-  final VoidCallback? onPressed;
-  final bool busy;
-  final IconData? icon;
-  @override
-  Widget build(BuildContext context) => FilledButton(
-    onPressed: busy ? null : onPressed,
-    child: Padding(
-      padding: const EdgeInsets.symmetric(vertical: 12),
-      child: Wrap(
-        alignment: WrapAlignment.center,
-        crossAxisAlignment: WrapCrossAlignment.center,
-        spacing: 10,
-        children: [
-          if (busy)
-            const SizedBox.square(
-              dimension: 18,
-              child: CircularProgressIndicator(strokeWidth: 2),
-            ),
-          if (!busy && icon != null) Icon(icon, size: 20),
-          Text(label, textAlign: TextAlign.center),
-        ],
-      ),
-    ),
-  );
 }

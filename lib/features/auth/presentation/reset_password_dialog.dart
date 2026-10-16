@@ -34,6 +34,11 @@ class _ResetPasswordDialogState extends State<ResetPasswordDialog> {
         canPop: !auth.busy,
         child: AlertDialog(
           scrollable: true,
+          icon: Icon(
+            Icons.lock_reset_rounded,
+            size: 32,
+            color: Theme.of(context).colorScheme.primary,
+          ),
           title: const Text('Reset your password'),
           content: _sent
               ? const Text(
@@ -60,6 +65,10 @@ class _ResetPasswordDialogState extends State<ResetPasswordDialog> {
                         autocorrect: false,
                         decoration: const InputDecoration(
                           labelText: 'Email address',
+                          prefixIcon: Icon(
+                            Icons.mail_outline_rounded,
+                            size: 20,
+                          ),
                         ),
                       ),
                       if (auth.error != null)
@@ -68,23 +77,32 @@ class _ResetPasswordDialogState extends State<ResetPasswordDialog> {
                   ),
                 ),
           actions: [
-            TextButton(
-              onPressed: auth.busy ? null : () => Navigator.of(context).pop(),
-              child: Text(_sent ? 'Done' : 'Cancel'),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (!_sent)
+                  ActionButton(
+                    label: auth.busy ? 'Sending…' : 'Send reset link',
+                    busy: auth.busy,
+                    icon: Icons.mail_outline_rounded,
+                    onPressed: () async {
+                      if (!_form.currentState!.validate()) return;
+                      await auth.resetPassword(_email.text.trim());
+                      if (mounted && auth.error == null) {
+                        setState(() => _sent = true);
+                      }
+                    },
+                  ),
+                const SizedBox(height: 8),
+                TextButton(
+                  onPressed: auth.busy
+                      ? null
+                      : () => Navigator.of(context).pop(),
+                  child: Text(_sent ? 'Done' : 'Cancel'),
+                ),
+              ],
             ),
-            if (!_sent)
-              FilledButton(
-                onPressed: auth.busy
-                    ? null
-                    : () async {
-                        if (!_form.currentState!.validate()) return;
-                        await auth.resetPassword(_email.text.trim());
-                        if (mounted && auth.error == null) {
-                          setState(() => _sent = true);
-                        }
-                      },
-                child: Text(auth.busy ? 'Sending…' : 'Send reset link'),
-              ),
           ],
         ),
       );

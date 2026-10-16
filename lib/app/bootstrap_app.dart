@@ -9,6 +9,8 @@ import 'package:devventory_app/features/auth/index.dart';
 import 'package:devventory_app/features/workspace/index.dart';
 import 'package:devventory_app/shared/network/api_client.dart';
 import 'package:devventory_app/shared/presentation/companion_layout.dart';
+import 'package:devventory_app/shared/presentation/soft_card.dart';
+import 'package:devventory_app/shared/presentation/venty_mascot.dart';
 
 class BootstrapApp extends StatefulWidget {
   const BootstrapApp({super.key});
@@ -70,28 +72,31 @@ class _BootstrapAppState extends State<BootstrapApp> {
         debugShowCheckedModeBanner: false,
         theme: companionTheme(),
         home: CompanionLayout(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(
-                _error == null
-                    ? 'Starting Devventory…'
-                    : 'Setup needs attention',
-                style: const TextStyle(
-                  fontSize: 26,
-                  color: Color(0xFFE2E8F0),
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              const SizedBox(height: 24),
-              if (_error == null)
-                const Center(child: CircularProgressIndicator())
-              else ...[
-                StatusNotice(_error!, isError: true),
+          child: SoftCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const Center(child: VentyMascot()),
                 const SizedBox(height: 24),
-                ActionButton(label: 'Try again', onPressed: _start),
+                Text(
+                  _error == null
+                      ? 'Starting Devventory…'
+                      : 'Setup needs attention',
+                  style: const TextStyle(
+                    fontSize: 26,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 24),
+                if (_error == null)
+                  const Center(child: CircularProgressIndicator())
+                else ...[
+                  StatusNotice(_error!, isError: true),
+                  const SizedBox(height: 24),
+                  ActionButton(label: 'Try again', onPressed: _start),
+                ],
               ],
-            ],
+            ),
           ),
         ),
       );

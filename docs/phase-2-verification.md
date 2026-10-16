@@ -111,3 +111,42 @@ out and verify a different account's connection/setup state. Do not send credent
 or tokens in chat. Physical-device, signed-release and store acceptance remain
 Phase 6. iOS registration, schemes, native validation and distribution remain
 Phase 7 on macOS. Debug release signing is deliberately not a production signature.
+
+## Soft-minimalist UI interlude, 2026-10-16
+
+After the user reported authentication working, the sign-in, verification, reset,
+workspace, and startup/session screens were restyled without changing the auth,
+network, configuration, or discovery controllers/repositories. Shared components
+now provide Inter typography, 28dp soft cards, a tactile primary action, and the
+bundled Venty robot. See [visual-design.md](visual-design.md) for tokens, component
+behavior, framework references, and asset provenance.
+
+- `flutter test --no-pub test lib`: **52 passed**, including seven tactile-button
+  checks and thirteen additional responsive/dialog checks.
+- `flutter analyze --no-pub`: **no issues**.
+- `tool/test_auth_journey.ps1 -Device emulator-5554`: **all three probes passed**
+  again on Pixel 9 Pro, Android 17/API 37: real SDK sign-in, email verification,
+  synthetic workspace discovery, reset request, process-restart restoration,
+  sign-out, and signed-out persistence. The local demo Auth emulator is not
+  production acceptance.
+- Native development-flavor debug APK built and launched successfully. The
+  transparent mascot and bundled Inter fonts were inspected on Android, including
+  the raised primary button. Preview: `build/ui-redesign-signin.png` (generated,
+  ignored build artifact).
+- Final debug capture also showed slow cold startup and frame-skip warnings on
+  the AVD. A direct activity restart completed (about 26 seconds to first display)
+  and reached sign-in; the reset dialog was also inspected without sending a
+  production request. This is functional preview evidence, not startup-performance
+  acceptance. Profile a healthy physical device/release build in Phase 6.
+- Layout coverage includes sign-in, verification, and ready workspace at 320dp
+  with 2× text and at 768/1024/1440dp, long account names, password reset with a
+  simulated keyboard, labeled 48dp targets, and text-contrast guidelines.
+- Button coverage includes immediate touch-down feedback in a scrolling gesture
+  arena, 6dp depression without resizing, no remaining base at full depression,
+  release-only activation, drag/pointer cancellation, disabled/loading lockout,
+  progress semantics, keyboard focus/Enter/Space, and stationary reduced motion.
+- `git diff --check` passed. Existing FlutterFire/Kotlin and Java native-access
+  build warnings remain; dependency upgrades are outside this presentation slice.
+
+No production login, cloud mutation, deployment, signing, publishing, or Phase 3
+work was performed. Existing physical-device/iOS/release boundaries remain.

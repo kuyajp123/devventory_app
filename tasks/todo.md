@@ -32,6 +32,18 @@
 
 ## Phase gates
 
+### UI interlude — soft minimalism
+
+- [x] Preserve the navy/sky-blue accent and bundle licensed Inter typography.
+- [x] Share rounded cards, adaptive headings, and accessible tactile primary actions.
+- [x] Generate and bundle Venty, with the prompt and asset provenance recorded.
+- [x] Restyle authentication, workspace connection, and startup/session states.
+- [x] Verify 52 tests, analyzer, responsive/accessibility states, Android rendering,
+      and all three native demo Firebase restart probes. See
+      `docs/phase-2-verification.md` and `docs/visual-design.md`.
+
+### Release gates
+
 - [ ] Phase 2: implementation/local checks complete; private production-account
       acceptance remains before closing the gate.
 - [ ] Phase 3: Projects, atomic account-scoped offline cache, and refresh.
