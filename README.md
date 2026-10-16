@@ -1,17 +1,57 @@
-# devventory_app
+# Devventory Mobile
 
-A new Flutter project.
+Flutter companion for Devventory desktop. The intended release reads projects,
+agent usage, Environment Tracker, and validation metadata through the existing
+Firebase-authenticated Cloudflare Worker, with cached offline reads. Android
+launches first, followed by iOS.
 
-## Getting Started
+Phase 2 replaces the starter with Firebase sign-in, session restoration,
+email-verification recovery, password reset, sign-out, and workspace discovery.
+Projects and persistent offline metadata are Phase 3; this build only checks the
+workspace connection. Account creation and workspace setup remain on desktop.
 
-This project is a starting point for a Flutter application.
+- [Master implementation plan](tasks/plan.md)
+- [Implementation checklist](tasks/todo.md)
+- [Phase 1 evidence and remaining gate](docs/phase-1-verification.md)
+- [Application identities and setup](docs/mobile-setup.md)
+- [Phase 2 implementation and acceptance](docs/phase-2-verification.md)
 
-A few resources to get you started if this is your first Flutter project:
+## Run on Android
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+```powershell
+flutter pub get
+flutter run --flavor development -d emulator-5554
+```
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+Select your device from `flutter devices`. Development and production are separate
+Android application IDs and Firebase registrations in the existing `devventory`
+identity project. Both read the production Worker; use synthetic desktop data for
+testing. No service-account or publisher credentials are needed.
+
+Native iOS registration/build validation is deferred to macOS in Phase 7. Web and
+desktop targets are not configured mobile release targets.
+
+## Local verification
+
+```powershell
+flutter pub get
+dart format --output=none --set-exit-if-changed lib test integration_test tool
+flutter analyze
+flutter test test lib
+```
+
+When the desktop repository is checked out beside this one, also run:
+
+```powershell
+dart run tool/check_contract_sync.dart ../devventory
+```
+
+Desktop owns the canonical v1 read schema and fixtures under `cloud/contracts`.
+This repository pins synthetic fixtures under `test/contracts/fixtures` so its
+tests run independently. Contract examples are not production credentials or a
+replacement for real-account/device acceptance.
+
+Feature-owned unit tests are colocated under `lib/features/*/tests` and
+`lib/shared/network/tests`; use the full command above, not just `flutter test`.
+Cross-feature widget journeys live under `test` and native SDK journeys under
+`integration_test`. See the setup guide for the test-only Auth emulator workflow.

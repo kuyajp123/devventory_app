@@ -1,0 +1,34 @@
+{
+  "flutter": {
+    "platforms": {
+      "android": {
+        "buildConfigurations": {
+          "src\\development": {
+            "projectId": "devventory",
+            "appId": "1:570074439211:android:bbf046d14854829c8d146e",
+            "fileOutput": "android/app/src/development/google-services.json"
+          },
+          "src\\production": {
+            "projectId": "devventory",
+            "appId": "1:570074439211:android:3865ca027d3683268d146e",
+            "fileOutput": "android/app/src/production/google-services.json"
+          }
+        }
+      },
+      "dart": {
+        "lib/app/config/firebase_development.dart": {
+          "projectId": "devventory",
+          "configurations": {
+            "android": "1:570074439211:android:bbf046d14854829c8d146e"
+          }
+        },
+        "lib/app/config/firebase_production.dart": {
+          "projectId": "devventory",
+          "configurations": {
+            "android": "1:570074439211:android:3865ca027d3683268d146e"
+          }
+        }
+      }
+    }
+  }
+}
