@@ -1,3 +1,6 @@
+import 'package:devventory_app/shared/cache/tests/test_cache.dart';
+import 'package:devventory_app/features/projects/tests/fake_projects_repository.dart';
+
 import 'dart:async';
 
 import 'package:dio/dio.dart';
@@ -40,7 +43,7 @@ class PendingWorkspaces implements WorkspaceRepository {
 
 void main() {
   WidgetController.hitTestWarningShouldBeFatal = true;
-  testWidgets('missing flavor has a recoverable startup screen', (
+  testCachedWidgets('missing flavor has a recoverable startup screen', (
     tester,
   ) async {
     await tester.pumpWidget(const BootstrapApp());
@@ -53,54 +56,76 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('changing accounts cancels discovery and ignores old results', (
-    tester,
-  ) async {
-    final auth = FakeAuthRepository(
-      const AccountSession(
-        uid: 'one',
-        email: 'one@example.test',
-        emailVerified: true,
-      ),
-    );
-    final workspace = PendingWorkspaces();
-    await tester.pumpWidget(DevventoryApp(auth: auth, workspaces: workspace));
-    await tester.pump();
-    await tester.pump();
-    expect(workspace.results, hasLength(1));
-    auth.emit(
-      const AccountSession(
-        uid: 'two',
-        email: 'two@example.test',
-        emailVerified: true,
-      ),
-    );
-    await tester.pump();
-    expect(workspace.tokens.first?.isCancelled, isTrue);
-    expect(workspace.results, hasLength(2));
-    workspace.results.first.complete(
-      const Workspace(id: 'one', publisherId: 'publisher'),
-    );
-    await tester.pump();
-    expect(find.text('Workspace connected'), findsNothing);
-    expect(find.text('one@example.test'), findsNothing);
-    workspace.results.last.complete(
-      const Workspace(id: null, publisherId: null),
-    );
-    await tester.pumpAndSettle();
-    expect(find.text('Finish setup on desktop'), findsOneWidget);
-    expect(find.text('two@example.test'), findsOneWidget);
-    await tester.pumpWidget(const SizedBox());
-    await auth.dispose();
-  });
-  testWidgets(
+  testCachedWidgets(
+    'changing accounts cancels discovery and ignores old results',
+    (tester) async {
+      final auth = FakeAuthRepository(
+        const AccountSession(
+          uid: 'one',
+          email: 'one@example.test',
+          emailVerified: true,
+        ),
+      );
+      final workspace = PendingWorkspaces();
+      await tester.pumpWidget(
+        DevventoryApp(
+          cache: testCache(),
+          projects: FakeProjectsRepository(),
+          auth: auth,
+          workspaces: workspace,
+        ),
+      );
+      for (var frame = 0; frame < 100 && workspace.results.isEmpty; frame++) {
+        await tester.pump(const Duration(milliseconds: 16));
+      }
+      expect(workspace.results, hasLength(1));
+      auth.emit(
+        const AccountSession(
+          uid: 'two',
+          email: 'two@example.test',
+          emailVerified: true,
+        ),
+      );
+      for (
+        var frame = 0;
+        frame < 100 && workspace.results.length < 2;
+        frame++
+      ) {
+        await tester.pump(const Duration(milliseconds: 16));
+      }
+      expect(workspace.tokens.first?.isCancelled, isTrue);
+      expect(workspace.results, hasLength(2));
+      workspace.results.first.complete(
+        const Workspace(id: 'one', publisherId: 'publisher'),
+      );
+      await tester.pump();
+      expect(find.text('Workspace connected'), findsNothing);
+      expect(find.text('one@example.test'), findsNothing);
+      workspace.results.last.complete(
+        const Workspace(id: null, publisherId: null),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('Finish setup on desktop'), findsOneWidget);
+      expect(find.text('two@example.test'), findsOneWidget);
+      await tester.pumpWidget(const SizedBox());
+      await auth.dispose();
+    },
+  );
+  testCachedWidgets(
     'sign-in validates input, verifies email, discovers workspace and signs out',
     (tester) async {
       final auth = FakeAuthRepository();
       final workspace = FakeWorkspaceRepository(
         workspace: const Workspace(id: 'one', publisherId: 'publisher'),
       );
-      await tester.pumpWidget(DevventoryApp(auth: auth, workspaces: workspace));
+      await tester.pumpWidget(
+        DevventoryApp(
+          cache: testCache(),
+          projects: FakeProjectsRepository(),
+          auth: auth,
+          workspaces: workspace,
+        ),
+      );
       await tester.pumpAndSettle();
       await tester.ensureVisible(find.widgetWithText(FilledButton, 'Sign in'));
       await tester.tap(find.widgetWithText(FilledButton, 'Sign in'));
@@ -123,8 +148,10 @@ void main() {
       await tester.ensureVisible(find.text("I've verified my email"));
       await tester.tap(find.text("I've verified my email"));
       await tester.pumpAndSettle();
-      expect(find.text('Workspace connected'), findsOneWidget);
-      expect(workspace.requests, 1);
+      expect(find.text('Dashboard'), findsOneWidget);
+      expect(workspace.requests, 3); // Discovery plus project pre/post-flight.
+      await tester.tap(find.byKey(const Key('account-tab')));
+      await tester.pumpAndSettle();
       await tester.tap(find.text('Sign out'));
       await tester.pumpAndSettle();
       expect(find.widgetWithText(FilledButton, 'Sign in'), findsOneWidget);
@@ -133,35 +160,41 @@ void main() {
     },
   );
 
-  testWidgets('reset has a generic success notice and no account creation', (
-    tester,
-  ) async {
-    final auth = FakeAuthRepository();
-    await tester.pumpWidget(
-      DevventoryApp(auth: auth, workspaces: FakeWorkspaceRepository()),
-    );
-    await tester.pumpAndSettle();
-    await tester.ensureVisible(find.text('Forgot password?'));
-    await tester.tap(find.text('Forgot password?'));
-    await tester.pumpAndSettle();
-    await tester.enterText(
-      find.byKey(const Key('reset-email')),
-      'synthetic@example.test',
-    );
-    await tester.tap(find.text('Send reset link'));
-    await tester.pumpAndSettle();
-    expect(find.textContaining('If an account exists'), findsWidgets);
-    expect(auth.sentReset, 1);
-    expect(find.text('Create account'), findsNothing);
-    await tester.pumpWidget(const SizedBox());
-    await auth.dispose();
-  });
+  testCachedWidgets(
+    'reset has a generic success notice and no account creation',
+    (tester) async {
+      final auth = FakeAuthRepository();
+      await tester.pumpWidget(
+        DevventoryApp(
+          cache: testCache(),
+          projects: FakeProjectsRepository(),
+          auth: auth,
+          workspaces: FakeWorkspaceRepository(),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(find.text('Forgot password?'));
+      await tester.tap(find.text('Forgot password?'));
+      await tester.pumpAndSettle();
+      await tester.enterText(
+        find.byKey(const Key('reset-email')),
+        'synthetic@example.test',
+      );
+      await tester.tap(find.text('Send reset link'));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('If an account exists'), findsWidgets);
+      expect(auth.sentReset, 1);
+      expect(find.text('Create account'), findsNothing);
+      await tester.pumpWidget(const SizedBox());
+      await auth.dispose();
+    },
+  );
 
   for (final workspace in [
     const Workspace(id: null, publisherId: null),
     const Workspace(id: 'one', publisherId: null),
   ]) {
-    testWidgets(
+    testCachedWidgets(
       'missing workspace or publisher guides users back to desktop: ${workspace.id}',
       (tester) async {
         final auth = FakeAuthRepository(
@@ -173,6 +206,8 @@ void main() {
         );
         await tester.pumpWidget(
           DevventoryApp(
+            cache: testCache(),
+            projects: FakeProjectsRepository(),
             auth: auth,
             workspaces: FakeWorkspaceRepository(workspace: workspace),
           ),
@@ -186,36 +221,46 @@ void main() {
     );
   }
 
-  testWidgets('offline and expired session have different recovery actions', (
+  testCachedWidgets(
+    'offline and expired session have different recovery actions',
+    (tester) async {
+      final auth = FakeAuthRepository(
+        const AccountSession(
+          uid: 'one',
+          email: 'synthetic@example.test',
+          emailVerified: true,
+        ),
+      );
+      final workspace = FakeWorkspaceRepository(
+        failure: const ApiFailure(ApiFailureKind.offline),
+      );
+      await tester.pumpWidget(
+        DevventoryApp(
+          cache: testCache(),
+          projects: FakeProjectsRepository(),
+          auth: auth,
+          workspaces: workspace,
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('Connection unavailable'), findsOneWidget);
+      workspace.failure = const ApiFailure(ApiFailureKind.unauthorized);
+      await tester.ensureVisible(find.text('Try again'));
+      await tester.tap(find.text('Try again'));
+      await tester.pumpAndSettle();
+      expect(find.text('Sign in again'), findsOneWidget);
+      await tester.ensureVisible(find.text('Sign in again'));
+      await tester.tap(find.text('Sign in again'));
+      await tester.pumpAndSettle();
+      expect(find.widgetWithText(FilledButton, 'Sign in'), findsOneWidget);
+      await tester.pumpWidget(const SizedBox());
+      await auth.dispose();
+    },
+  );
+
+  testCachedWidgets('sign-in fits a narrow screen and large text', (
     tester,
   ) async {
-    final auth = FakeAuthRepository(
-      const AccountSession(
-        uid: 'one',
-        email: 'synthetic@example.test',
-        emailVerified: true,
-      ),
-    );
-    final workspace = FakeWorkspaceRepository(
-      failure: const ApiFailure(ApiFailureKind.offline),
-    );
-    await tester.pumpWidget(DevventoryApp(auth: auth, workspaces: workspace));
-    await tester.pumpAndSettle();
-    expect(find.text('Connection unavailable'), findsOneWidget);
-    workspace.failure = const ApiFailure(ApiFailureKind.unauthorized);
-    await tester.ensureVisible(find.text('Try again'));
-    await tester.tap(find.text('Try again'));
-    await tester.pumpAndSettle();
-    expect(find.text('Sign in again'), findsOneWidget);
-    await tester.ensureVisible(find.text('Sign in again'));
-    await tester.tap(find.text('Sign in again'));
-    await tester.pumpAndSettle();
-    expect(find.widgetWithText(FilledButton, 'Sign in'), findsOneWidget);
-    await tester.pumpWidget(const SizedBox());
-    await auth.dispose();
-  });
-
-  testWidgets('sign-in fits a narrow screen and large text', (tester) async {
     tester.view.physicalSize = const Size(320, 740);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
@@ -223,6 +268,8 @@ void main() {
     final auth = FakeAuthRepository();
     await tester.pumpWidget(
       DevventoryApp(
+        cache: testCache(),
+        projects: FakeProjectsRepository(),
         auth: auth,
         workspaces: FakeWorkspaceRepository(),
         textScaler: const TextScaler.linear(2),

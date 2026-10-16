@@ -4,6 +4,12 @@ class Workspace {
   final String? publisherId;
   bool get hasPublisher => id != null && publisherId != null;
 
+  Map<String, dynamic> toJson() => {
+    'protocolVersion': 1,
+    'workspaceId': id,
+    'deviceId': publisherId,
+  };
+
   factory Workspace.fromJson(Object? value) {
     if (value is! Map ||
         value['protocolVersion'] != 1 ||

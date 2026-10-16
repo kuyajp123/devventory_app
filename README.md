@@ -7,14 +7,21 @@ launches first, followed by iOS.
 
 Phase 2 replaces the starter with Firebase sign-in, session restoration,
 email-verification recovery, password reset, sign-out, and workspace discovery.
-Projects and persistent offline metadata are Phase 3; this build only checks the
-workspace connection. Account creation and workspace setup remain on desktop.
+Phase 3 adds project list/detail browsing, complete paginated refreshes, freshness
+labels, and private account/workspace-scoped SQLite caching for offline restarts.
+Account creation and workspace setup remain on desktop.
+
+Linked users now land on the Home dashboard, with project analytics rendered by
+`fl_chart`, a partial-width right-side project selector, and Home/Usage/Tracker/Account
+bottom tabs. Usage and Tracker clearly mark their future implementation status.
+See the [dashboard/navigation UI interlude](docs/dashboard-navigation.md).
 
 - [Master implementation plan](tasks/plan.md)
 - [Implementation checklist](tasks/todo.md)
 - [Phase 1 evidence and remaining gate](docs/phase-1-verification.md)
 - [Application identities and setup](docs/mobile-setup.md)
 - [Phase 2 implementation and acceptance](docs/phase-2-verification.md)
+- [Phase 3 projects, offline behavior, and acceptance](docs/phase-3-verification.md)
 - [Visual system, tactile actions, and Venty mascot](docs/visual-design.md)
 
 ## Run on Android

@@ -5,8 +5,11 @@ import 'package:devventory_app/features/auth/auth_repository.dart';
 import 'package:devventory_app/shared/network/api_failure.dart';
 
 class AuthController extends ChangeNotifier {
-  AuthController(this._repository, {DateTime Function()? now})
-    : _now = now ?? DateTime.now {
+  AuthController(
+    this._repository, {
+    DateTime Function()? now,
+    this.beforeSignOut,
+  }) : _now = now ?? DateTime.now {
     _subscription = _repository.sessions.listen(
       _accept,
       onError: (Object _) {
@@ -17,6 +20,7 @@ class AuthController extends ChangeNotifier {
     );
   }
   final AuthRepository _repository;
+  final Future<void> Function()? beforeSignOut;
   final DateTime Function() _now;
   late final StreamSubscription<AccountSession?> _subscription;
   AccountSession? session;
@@ -88,6 +92,7 @@ class AuthController extends ChangeNotifier {
     _blockedUid = session?.uid ?? _repository.userId;
     session = null;
     _accountRevision++;
+    _emit(); // Revoke the authenticated navigation tree immediately.
     try {
       await _repository.signOut();
     } catch (_) {
@@ -108,6 +113,7 @@ class AuthController extends ChangeNotifier {
     signingOut =
         true; // Hide/cancel the workspace before SDK sign-out completes.
     await _run(() async {
+      await beforeSignOut?.call();
       await _repository.signOut();
     });
   }

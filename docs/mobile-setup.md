@@ -101,6 +101,15 @@ otherwise deletes the APK and its native session storage after each probe. Run
 `flutter run --flavor development` afterward to replace the test entry point with
 the normal application; the script leaves its test APK installed.
 
+Phase 3 also provides `./tool/test_projects_journey.ps1 -Device emulator-5556`.
+It uses real SDK session persistence and native SQLite with intercepted synthetic
+Worker responses, covering two-page projects, offline process restart, unopened
+detail, updates/deletion, sign-out and persisted cleanup. Start a fresh Auth
+emulator for a full seed run; use the actual device ID from `flutter devices`.
+See [Phase 3 verification](phase-3-verification.md) for the contract and privacy
+boundaries. Run host tests and native builds sequentially, not simultaneously in
+the same checkout, because Flutter shares generated test assets.
+
 Debug Android network security permits HTTP only to loopback/Android's host alias
 for the local emulator and development tools. Production/release uses HTTPS only.
 

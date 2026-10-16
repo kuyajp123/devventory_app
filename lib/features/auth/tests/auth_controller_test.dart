@@ -9,8 +9,61 @@ import 'package:devventory_app/shared/network/api_failure.dart';
 
 import 'fake_auth_repository.dart';
 
+Future<void> settle() => Future<void>.delayed(Duration.zero);
+
 void main() {
-  Future<void> settle() => Future<void>.delayed(Duration.zero);
+  test(
+    'failed offline cleanup prevents successful sign-out and supports retry',
+    () async {
+      final repo = FakeAuthRepository(
+        const AccountSession(
+          uid: 'one',
+          email: 'one@example.test',
+          emailVerified: true,
+        ),
+      );
+      var failCleanup = true;
+      final controller = AuthController(
+        repo,
+        beforeSignOut: () async {
+          if (failCleanup) throw StateError('Synthetic disk failure');
+        },
+      );
+      await settle();
+      await controller.signOut();
+      expect(repo.account?.uid, 'one');
+      expect(controller.signingOut, false);
+      expect(controller.error, isNotNull);
+      failCleanup = false;
+      await controller.signOut();
+      expect(repo.account, isNull);
+      controller.dispose();
+      await repo.dispose();
+    },
+  );
+  test('sign-out hides content and waits for offline cache cleanup before SDK sign-out', () async {
+    final repo = FakeAuthRepository(
+      const AccountSession(
+        uid: 'one',
+        email: 'one@example.test',
+        emailVerified: true,
+      ),
+    );
+    final cleanup = Completer<void>();
+    final controller = AuthController(
+      repo,
+      beforeSignOut: () => cleanup.future,
+    );
+    await Future<void>.delayed(Duration.zero);
+    final signingOut = controller.signOut();
+    expect(controller.signingOut, isTrue);
+    expect(repo.account?.uid, 'one');
+    cleanup.complete();
+    await signingOut;
+    expect(repo.account, isNull);
+    controller.dispose();
+    await repo.dispose();
+  });
 
   test(
     'failed reauthentication cannot unblock an old cached SDK session',

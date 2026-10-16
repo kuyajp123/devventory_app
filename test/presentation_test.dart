@@ -1,3 +1,5 @@
+import 'package:devventory_app/shared/cache/tests/test_cache.dart';
+import 'package:devventory_app/features/projects/tests/fake_projects_repository.dart';
 import 'package:devventory_app/app/devventory_app.dart';
 import 'package:devventory_app/features/auth/index.dart';
 import 'package:devventory_app/features/auth/tests/fake_auth_repository.dart';
@@ -22,7 +24,9 @@ void main() {
     const Size(1440, 900),
   ]) {
     for (final state in ['signed-out', 'verification', 'workspace']) {
-      testWidgets('$state fits $size with accessible actions', (tester) async {
+      testCachedWidgets('$state fits $size with accessible actions', (
+        tester,
+      ) async {
         tester.view.physicalSize = size;
         tester.view.devicePixelRatio = 1;
         addTearDown(tester.view.resetPhysicalSize);
@@ -38,32 +42,37 @@ void main() {
         );
         await tester.pumpWidget(
           DevventoryApp(
+            cache: testCache(),
+            projects: FakeProjectsRepository(),
             auth: auth,
             workspaces: _Workspaces(),
             textScaler: TextScaler.linear(size.width == 320 ? 2 : 1),
           ),
         );
         await tester.pumpAndSettle();
-        expect(find.byType(VentyMascot), findsOneWidget);
+        expect(
+          find.byType(VentyMascot),
+          state == 'workspace' && size.width == 320
+              ? findsNothing
+              : findsOneWidget,
+        );
         final action = find.widgetWithText(FilledButton, switch (state) {
           'signed-out' => 'Sign in',
           'verification' => "I've verified my email",
-          _ => 'Refresh connection',
+          _ => 'Browse projects',
         });
         await tester.ensureVisible(action);
         await tester.pumpAndSettle();
         expect(tester.getSize(action).height, greaterThanOrEqualTo(48));
         await expectLater(tester, meetsGuideline(androidTapTargetGuideline));
         await expectLater(tester, meetsGuideline(labeledTapTargetGuideline));
-        await expectLater(tester, meetsGuideline(textContrastGuideline));
         expect(tester.takeException(), isNull);
-        await tester.pumpWidget(const SizedBox());
         await auth.dispose();
-      });
+      }, contrast: true);
     }
   }
 
-  testWidgets(
+  testCachedWidgets(
     'password reset remains scrollable with large text and keyboard',
     (tester) async {
       tester.view.physicalSize = const Size(320, 740);
@@ -73,6 +82,8 @@ void main() {
       final auth = FakeAuthRepository();
       await tester.pumpWidget(
         DevventoryApp(
+          cache: testCache(),
+          projects: FakeProjectsRepository(),
           auth: auth,
           workspaces: _Workspaces(),
           textScaler: const TextScaler.linear(2),

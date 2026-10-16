@@ -28,12 +28,13 @@ void main() {
       final repo = PendingWorkspace();
       final controller = WorkspaceController(repo);
       final loading = controller.refresh();
-      await controller.refresh();
+      final concurrent = controller.refresh();
       expect(repo.requests, 1);
       controller.dispose();
       expect(repo.token?.isCancelled, isTrue);
       repo.result.complete(const Workspace(id: null, publisherId: null));
       await loading;
+      await concurrent;
       expect(controller.workspace, isNull);
     },
   );

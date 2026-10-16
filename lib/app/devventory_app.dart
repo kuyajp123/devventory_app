@@ -2,6 +2,10 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:devventory_app/app/app_theme.dart';
+import 'package:devventory_app/app/cache_identity_gate.dart';
+import 'package:devventory_app/app/companion_session.dart';
+import 'package:devventory_app/features/projects/index.dart';
+import 'package:devventory_app/shared/cache/metadata_cache.dart';
 import 'package:devventory_app/features/auth/index.dart';
 import 'package:devventory_app/features/workspace/index.dart';
 import 'package:devventory_app/shared/presentation/companion_layout.dart';
@@ -13,10 +17,14 @@ class DevventoryApp extends StatefulWidget {
     super.key,
     required this.auth,
     required this.workspaces,
+    required this.projects,
+    required this.cache,
     this.textScaler,
   });
   final AuthRepository auth;
   final WorkspaceRepository workspaces;
+  final ProjectsRepository projects;
+  final MetadataCache cache;
   final TextScaler? textScaler;
   @override
   State<DevventoryApp> createState() => _DevventoryAppState();
@@ -24,7 +32,10 @@ class DevventoryApp extends StatefulWidget {
 
 class _DevventoryAppState extends State<DevventoryApp>
     with WidgetsBindingObserver {
-  late final _auth = AuthController(widget.auth);
+  late final _auth = AuthController(
+    widget.auth,
+    beforeSignOut: widget.cache.clear,
+  );
   int _refreshSignal = 0;
   @override
   void initState() {
@@ -85,16 +96,27 @@ class _DevventoryAppState extends State<DevventoryApp>
             ),
           );
         }
-        if (_auth.session == null) return SignInPage(controller: _auth);
-        if (_auth.needsVerification) return VerificationPage(controller: _auth);
-        return WorkspacePage(
-          key: ValueKey(_auth.session!.uid),
-          repository: widget.workspaces,
-          email: _auth.session!.email,
-          onSignOut: _auth.busy ? null : _auth.signOut,
-          onVerificationRequired: _auth.requireVerification,
-          refreshSignal: _refreshSignal,
-          sessionError: _auth.error,
+        return CacheIdentityGate(
+          key: ValueKey(_auth.session?.uid),
+          uid: _auth.session?.uid,
+          cache: widget.cache,
+          builder: (account) {
+            if (_auth.session == null) return SignInPage(controller: _auth);
+            if (_auth.needsVerification) {
+              return VerificationPage(controller: _auth);
+            }
+            return CompanionSession(
+              key: ValueKey(_auth.session!.uid),
+              account: account!,
+              workspaces: widget.workspaces,
+              projects: widget.projects,
+              email: _auth.session!.email,
+              onSignOut: _auth.busy ? null : _auth.signOut,
+              onVerificationRequired: _auth.requireVerification,
+              refreshSignal: _refreshSignal,
+              sessionError: _auth.error,
+            );
+          },
         );
       },
     ),

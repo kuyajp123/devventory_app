@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
@@ -7,6 +9,8 @@ import 'package:devventory_app/app/config/app_configuration.dart';
 import 'package:devventory_app/app/devventory_app.dart';
 import 'package:devventory_app/features/auth/index.dart';
 import 'package:devventory_app/features/workspace/index.dart';
+import 'package:devventory_app/features/projects/index.dart';
+import 'package:devventory_app/shared/cache/metadata_cache.dart';
 import 'package:devventory_app/shared/network/api_client.dart';
 import 'package:devventory_app/shared/presentation/companion_layout.dart';
 import 'package:devventory_app/shared/presentation/soft_card.dart';
@@ -20,6 +24,7 @@ class BootstrapApp extends StatefulWidget {
 
 class _BootstrapAppState extends State<BootstrapApp> {
   ApiClient? _api;
+  MetadataCache? _cache;
   Widget? _application;
   String? _error;
   @override
@@ -40,10 +45,13 @@ class _BootstrapAppState extends State<BootstrapApp> {
         return;
       }
       _api = api;
+      final cache = _cache = MetadataCache();
       setState(
         () => _application = DevventoryApp(
           auth: auth,
           workspaces: CloudWorkspaceRepository(api),
+          projects: CloudProjectsRepository(api),
+          cache: cache,
         ),
       );
     } catch (_) {
@@ -61,6 +69,7 @@ class _BootstrapAppState extends State<BootstrapApp> {
   @override
   void dispose() {
     _api?.close();
+    unawaited(_cache?.close());
     super.dispose();
   }
 

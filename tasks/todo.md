@@ -30,6 +30,24 @@
       (Android 17/API 37; older-image compatibility caveat is recorded).
 - [ ] Complete private existing-account production workspace acceptance on Android.
 
+## Phase 3 — projects and offline reading
+
+- [x] Decode typed allowlisted v1 project records and canonical fixtures.
+- [x] Traverse opaque root cursors; reject malformed/partial/duplicate results.
+- [x] Add transactional SQLite scope replacement and persisted workspace discovery.
+- [x] Revoke leases and nested routes on UID/workspace changes and access denial.
+- [x] Clear saved metadata before completing sign-out; handle failed cleanup.
+- [x] Add responsive list/detail, loading/empty/no-download/error recovery, and
+      separate observation/receipt/download timestamps using the existing UI.
+- [x] Refresh on user request/resume without polling; respect retry deadlines.
+- [x] Verify controller, contract, cache, identity/navigation, and widget behavior.
+- [x] Complete all three native Android project/restart probes (demo Firebase,
+      intercepted Worker transport, real native SQLite); record evidence.
+- [x] Finish normal development APK, analyzer, formatting, fixture parity, and
+      full-suite checks (**94 passed**); record results.
+- [ ] Complete private desktop-to-production-to-mobile updates/deletion,
+      offline restart, and second-account acceptance.
+
 ## Phase gates
 
 ### UI interlude — soft minimalism
@@ -44,9 +62,14 @@
 
 ### Release gates
 
+The [dashboard/navigation UI interlude](../docs/dashboard-navigation.md) adds a
+Home-first shell, right-side project selector, and real project analytics without
+changing the master phase order or closing the private production gates.
+
 - [ ] Phase 2: implementation/local checks complete; private production-account
       acceptance remains before closing the gate.
-- [ ] Phase 3: Projects, atomic account-scoped offline cache, and refresh.
+- [ ] Phase 3: implementation/local verification recorded in
+      `docs/phase-3-verification.md`; private production journey remains a gate.
 - [ ] Phase 4: Agent usage with canonical parity and cached details.
 - [ ] Phase 5: Complete tracker/validation browsing with pinned snapshots.
 - [ ] Phase 6: Integrated/device verification and Android internal release.
@@ -57,3 +80,7 @@ confirmed desktop main was merged, and explicitly authorized Phase 2. The older
 production-deployment/build evidence above remains a separate unverified release
 checkpoint, not a reason to block the authorized mobile implementation. Do not
 mark a live production journey complete from fixtures or emulator results.
+
+On 2026-10-16 the user reported authentication working and explicitly authorized
+Phase 3. This is authorization to implement projects/offline reading, not evidence
+that the new project's production/device acceptance has already passed.

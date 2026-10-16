@@ -10,6 +10,8 @@ import 'package:integration_test/integration_test.dart';
 import 'package:devventory_app/app/devventory_app.dart';
 import 'package:devventory_app/features/auth/index.dart';
 import 'package:devventory_app/features/workspace/index.dart';
+import 'package:devventory_app/shared/cache/metadata_cache.dart';
+import 'package:devventory_app/features/projects/tests/fake_projects_repository.dart';
 
 const _project = 'demo-devventory-mobile';
 const _email = 'phase2-synthetic@example.test';
@@ -60,6 +62,7 @@ void main() {
     await sdk.useAuthEmulator('10.0.2.2', 9099);
     final auth = FirebaseAuthRepository(sdk);
     final workspaces = _Workspaces();
+    final cache = MetadataCache(path: ':memory:');
 
     if (probe == 'seed') {
       await sdk.signOut();
@@ -70,7 +73,12 @@ void main() {
       );
       await sdk.signOut();
       await tester.pumpWidget(
-        DevventoryApp(auth: auth, workspaces: workspaces),
+        DevventoryApp(
+          auth: auth,
+          workspaces: workspaces,
+          cache: cache,
+          projects: FakeProjectsRepository(),
+        ),
       );
       await tester.pumpAndSettle();
       await tester.enterText(find.byKey(const Key('email')), _email);
@@ -92,7 +100,7 @@ void main() {
       await tester.ensureVisible(find.text("I've verified my email"));
       await tester.tap(find.text("I've verified my email"));
       await tester.pumpAndSettle();
-      expect(find.text('Workspace connected'), findsOneWidget);
+      expect(find.text('Dashboard'), findsOneWidget);
       expect(
         (await sdk.currentUser!.getIdTokenResult(true))
             .claims?['email_verified'],
@@ -113,10 +121,17 @@ void main() {
       expect(restored?.email, _email);
       expect(restored?.emailVerified, isTrue);
       await tester.pumpWidget(
-        DevventoryApp(auth: auth, workspaces: workspaces),
+        DevventoryApp(
+          auth: auth,
+          workspaces: workspaces,
+          cache: cache,
+          projects: FakeProjectsRepository(),
+        ),
       );
       await tester.pumpAndSettle();
-      expect(find.text('Workspace connected'), findsOneWidget);
+      expect(find.text('Dashboard'), findsOneWidget);
+      await tester.tap(find.byKey(const Key('account-tab')));
+      await tester.pumpAndSettle();
       await tester.tap(find.text('Sign out'));
       await tester.pumpAndSettle();
       expect(find.widgetWithText(FilledButton, 'Sign in'), findsOneWidget);
@@ -124,7 +139,12 @@ void main() {
     } else if (probe == 'signed-out') {
       expect(await auth.sessions.first, isNull);
       await tester.pumpWidget(
-        DevventoryApp(auth: auth, workspaces: workspaces),
+        DevventoryApp(
+          auth: auth,
+          workspaces: workspaces,
+          cache: cache,
+          projects: FakeProjectsRepository(),
+        ),
       );
       await tester.pumpAndSettle();
       expect(find.widgetWithText(FilledButton, 'Sign in'), findsOneWidget);
@@ -133,5 +153,6 @@ void main() {
       fail('Unknown session probe');
     }
     await tester.pumpWidget(const SizedBox());
+    await cache.close();
   });
 }

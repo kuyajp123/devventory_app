@@ -1,8 +1,10 @@
 # Devventory Mobile — soft minimalism
 
 The mobile companion keeps the desktop brand's navy and sky-blue accent, with a
-softer, tactile presentation. This is a presentation-only interlude after Phase 2;
-it does not add project browsing, metadata caching, notifications, or new auth APIs.
+softer, tactile presentation. The initial presentation-only interlude followed
+Phase 2; Phase 3 subsequently added project browsing and caching. The
+[dashboard/navigation interlude](dashboard-navigation.md) reuses those data flows
+without adding notifications or new auth APIs.
 
 ## Visual system
 
