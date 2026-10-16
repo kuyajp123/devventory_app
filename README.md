@@ -15,6 +15,7 @@ workspace connection. Account creation and workspace setup remain on desktop.
 - [Phase 1 evidence and remaining gate](docs/phase-1-verification.md)
 - [Application identities and setup](docs/mobile-setup.md)
 - [Phase 2 implementation and acceptance](docs/phase-2-verification.md)
+- [Visual system, tactile actions, and Venty mascot](docs/visual-design.md)
 
 ## Run on Android
 
@@ -52,6 +53,6 @@ tests run independently. Contract examples are not production credentials or a
 replacement for real-account/device acceptance.
 
 Feature-owned unit tests are colocated under `lib/features/*/tests` and
-`lib/shared/network/tests`; use the full command above, not just `flutter test`.
+`lib/shared/*/tests`; use the full command above, not just `flutter test`.
 Cross-feature widget journeys live under `test` and native SDK journeys under
 `integration_test`. See the setup guide for the test-only Auth emulator workflow.

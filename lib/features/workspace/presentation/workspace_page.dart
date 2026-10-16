@@ -5,6 +5,8 @@ import 'package:devventory_app/features/workspace/workspace_repository.dart';
 import 'package:devventory_app/features/workspace/workspace_controller.dart';
 import 'package:devventory_app/shared/network/api_failure.dart';
 import 'package:devventory_app/shared/presentation/companion_layout.dart';
+import 'package:devventory_app/shared/presentation/companion_hero.dart';
+import 'package:devventory_app/features/workspace/presentation/workspace_account_card.dart';
 
 class WorkspacePage extends StatefulWidget {
   const WorkspacePage({
@@ -89,45 +91,21 @@ class _WorkspacePageState extends State<WorkspacePage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Align(
-              alignment: Alignment.centerLeft,
-              child: loading
-                  ? const SizedBox.square(
-                      dimension: 48,
-                      child: CircularProgressIndicator(),
-                    )
-                  : Icon(
-                      ready ? Icons.cloud_done_outlined : Icons.cloud_outlined,
-                      size: 56,
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
+            CompanionHero(
+              eyebrow: ready ? 'PRIVATE WORKSPACE' : 'CLOUD CONNECTION',
+              title: title,
+              message: message,
+              icon: failure != null
+                  ? Icons.cloud_off_rounded
+                  : ready
+                  ? Icons.cloud_done_rounded
+                  : Icons.cloud_queue_rounded,
             ),
-            const SizedBox(height: 24),
-            Text(title, style: Theme.of(context).textTheme.headlineLarge),
-            const SizedBox(height: 16),
-            Text(message, style: Theme.of(context).textTheme.bodyLarge),
             const SizedBox(height: 28),
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'CLOUD ACCOUNT',
-                      style: Theme.of(context).textTheme.labelMedium,
-                    ),
-                    const SizedBox(height: 8),
-                    Text(widget.email ?? 'Signed-in account'),
-                    if (ready && _controller.fetchedAt != null) ...[
-                      const SizedBox(height: 16),
-                      Text(
-                        'Connection checked at ${MaterialLocalizations.of(context).formatTimeOfDay(TimeOfDay.fromDateTime(_controller.fetchedAt!.toLocal()))} (device time).',
-                      ),
-                    ],
-                  ],
-                ),
-              ),
+            WorkspaceAccountCard(
+              email: widget.email,
+              ready: ready,
+              fetchedAt: _controller.fetchedAt,
             ),
             if (widget.sessionError != null)
               StatusNotice(widget.sessionError!, isError: true),
@@ -148,7 +126,9 @@ class _WorkspacePageState extends State<WorkspacePage> {
                   ? 'Refresh connection'
                   : 'Check again',
               busy: loading,
-              icon: Icons.refresh,
+              icon: failure?.kind == ApiFailureKind.unauthorized
+                  ? Icons.login_rounded
+                  : Icons.refresh_rounded,
               onPressed: failure?.kind == ApiFailureKind.unauthorized
                   ? widget.onSignOut
                   : _controller.canRetry

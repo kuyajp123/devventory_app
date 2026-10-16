@@ -39,12 +39,14 @@ class PendingWorkspaces implements WorkspaceRepository {
 }
 
 void main() {
+  WidgetController.hitTestWarningShouldBeFatal = true;
   testWidgets('missing flavor has a recoverable startup screen', (
     tester,
   ) async {
     await tester.pumpWidget(const BootstrapApp());
     await tester.pumpAndSettle();
     expect(find.text('Setup needs attention'), findsOneWidget);
+    await tester.ensureVisible(find.text('Try again'));
     await tester.tap(find.text('Try again'));
     await tester.pumpAndSettle();
     expect(find.text('Setup needs attention'), findsOneWidget);
@@ -100,6 +102,7 @@ void main() {
       );
       await tester.pumpWidget(DevventoryApp(auth: auth, workspaces: workspace));
       await tester.pumpAndSettle();
+      await tester.ensureVisible(find.widgetWithText(FilledButton, 'Sign in'));
       await tester.tap(find.widgetWithText(FilledButton, 'Sign in'));
       await tester.pumpAndSettle();
       expect(find.text('Enter your email address.'), findsOneWidget);
@@ -200,9 +203,11 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Connection unavailable'), findsOneWidget);
     workspace.failure = const ApiFailure(ApiFailureKind.unauthorized);
+    await tester.ensureVisible(find.text('Try again'));
     await tester.tap(find.text('Try again'));
     await tester.pumpAndSettle();
     expect(find.text('Sign in again'), findsOneWidget);
+    await tester.ensureVisible(find.text('Sign in again'));
     await tester.tap(find.text('Sign in again'));
     await tester.pumpAndSettle();
     expect(find.widgetWithText(FilledButton, 'Sign in'), findsOneWidget);

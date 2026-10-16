@@ -5,6 +5,8 @@ import 'package:devventory_app/app/app_theme.dart';
 import 'package:devventory_app/features/auth/index.dart';
 import 'package:devventory_app/features/workspace/index.dart';
 import 'package:devventory_app/shared/presentation/companion_layout.dart';
+import 'package:devventory_app/shared/presentation/soft_card.dart';
+import 'package:devventory_app/shared/presentation/venty_mascot.dart';
 
 class DevventoryApp extends StatefulWidget {
   const DevventoryApp({
@@ -66,14 +68,20 @@ class _DevventoryAppState extends State<DevventoryApp>
       builder: (context, _) {
         if (_auth.restoring || _auth.signingOut) {
           return CompanionLayout(
-            child: Column(
-              children: [
-                const CircularProgressIndicator(),
-                const SizedBox(height: 24),
-                Text(
-                  _auth.signingOut ? 'Signing out…' : 'Restoring your session…',
-                ),
-              ],
+            child: SoftCard(
+              child: Column(
+                children: [
+                  const VentyMascot(),
+                  const SizedBox(height: 24),
+                  const CircularProgressIndicator(),
+                  const SizedBox(height: 24),
+                  Text(
+                    _auth.signingOut
+                        ? 'Signing out…'
+                        : 'Restoring your session…',
+                  ),
+                ],
+              ),
             ),
           );
         }

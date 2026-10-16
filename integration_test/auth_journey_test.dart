@@ -80,6 +80,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('Verify your email'), findsOneWidget);
       expect(workspaces.reads, 0);
+      await tester.ensureVisible(find.text('Resend verification email'));
       await tester.tap(find.text('Resend verification email'));
       await tester.pumpAndSettle();
       final codes = await _oobCodes();
